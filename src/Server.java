@@ -2,46 +2,33 @@ import java.io.*;
 import java.util.*;
 import java.net.*;
 
-// Server class
 public class Server
 {
-    static Vector<ClientHandler> active_clients = new Vector<>();
-    static int client_counter = 0;
+    private final int serverPort;
+    private ArrayList<ClientHandler> clientList = new ArrayList<>();
 
-    public static void main(String[] args) throws IOException
-    {
-        // server is listening on port 1234
-        ServerSocket serSoc = new ServerSocket(1234);
-        Socket soc;
+    public Server(int serverPort){
+        this.serverPort = serverPort;
+    }
+    public List<ClientHandler> getClientList(){return clientList;}
 
-        //infinite loop for handling incoming clients requests
-        while (true)
-        {
-            // Accept the incoming request
-            soc = serSoc.accept();
-
-            System.out.println("New client request received : " + soc);
-
-            // obtain input and output streams
-            DataInputStream dis = new DataInputStream(soc.getInputStream());
-            DataOutputStream dos = new DataOutputStream(soc.getOutputStream());
-
-            System.out.println("Creating a new handler for this client...");
-
-            ClientHandler mtch = new ClientHandler(soc,"client " + client_counter, dis, dos);
-
-            // Create a new Thread with this object.
-            Thread t = new Thread(mtch);
-
-            System.out.println("Adding this client to active client list");
-
-            // add this client to active clients list
-            active_clients.add(mtch);
-
-            // start the thread.
-            t.start();
-            client_counter++;
-
+    public void start(){
+        try{
+            ServerSocket serverSocket = new ServerSocket(serverPort);
+            while(true){
+                Socket clientSocket = serverSocket.accept();
+                System.out.println("New connection from: " + clientSocket);
+                ClientHandler clientHandler = new ClientHandler(this, clientSocket);
+                Thread thread = new Thread(clientHandler);
+                thread.start();
+                clientList.add(clientHandler);
+            }
+        }catch (IOException e) {
+            e.printStackTrace();
         }
+    }
+
+    public void removeClient(ClientHandler clientHandler){
+        clientList.remove(clientHandler);
     }
 }
