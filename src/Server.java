@@ -17,7 +17,6 @@ public class Server
             ServerSocket serverSocket = new ServerSocket(serverPort);
             while(true){
                 Socket clientSocket = serverSocket.accept();
-                System.out.println("New connection from: " + clientSocket);
                 ClientHandler clientHandler = new ClientHandler(this, clientSocket);
                 Thread thread = new Thread(clientHandler);
                 thread.start();

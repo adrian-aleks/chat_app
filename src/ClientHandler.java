@@ -29,6 +29,16 @@ public class ClientHandler implements Runnable {
         }
     }
 
+    private String[] tokenizeMsg(String msg){
+        int start = 0;
+        String[] tokenizedMsg = msg.split("[ \n\t]");
+        if(tokenizedMsg.length > 2){
+           String[] res = {tokenizedMsg[0], tokenizedMsg[1], msg.substring(msg.indexOf(tokenizedMsg[1]) + tokenizedMsg[1].length()+1)};
+           return res;
+        }else{
+            return tokenizedMsg;
+        }
+    }
     private void handleClientSocket() throws IOException, InterruptedException {
         InputStream inputStream = clientSocket.getInputStream();
         this.outputStream = clientSocket.getOutputStream();
@@ -36,7 +46,7 @@ public class ClientHandler implements Runnable {
         BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
         String line;
         while ( (line = reader.readLine()) != null) {
-            String[] tokens = line.split(" ");
+            String[] tokens = tokenizeMsg(line);
             for(String token : tokens){
                 System.out.println(token);
             }
@@ -83,8 +93,8 @@ public class ClientHandler implements Runnable {
         }
     }
 
-    // msg login body
-    // msg" #room body
+    // msg {nick} body
+    // msg #{room} body
     // TODO fix truncated message body
     private void handleMessage(String[] msg) throws IOException {
 
@@ -148,7 +158,7 @@ public class ClientHandler implements Runnable {
                 this.nick = nick;
                 System.out.println("User logged in successfully: " + nick);
 
-                // send current user all other online logins
+                // send current user list off all users that are online
                 for(ClientHandler client : clientList) {
                     if (client.getNick() != null) {
                         if (!nick.equals(client.getNick())) {
@@ -158,7 +168,7 @@ public class ClientHandler implements Runnable {
                     }
                 }
 
-                // broadcast other online users current user's status
+                // broadcast current user's status to all other online
                 String onlineMsg = "online " + nick + "\n";
                 for(ClientHandler worker : clientList) {
                     if (!nick.equals(worker.getNick())) {
